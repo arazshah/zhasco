@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}فرصت‌های شغلی | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="فرصت‌های شغلی" lead="به تیم مهندسان ژرف آذران صدر بپیوندید." %}
+<div class="page"><div class="wrap">
+  <div class="stack" style="max-width:820px">
+    {% for j in jobs %}<a class="card" href="{{ j.get_absolute_url }}" style="color:inherit"><h3>{{ j.title }}</h3><span class="muted">{{ j.location }} · {{ j.get_job_type_display }}</span></a>
+    {% empty %}<p class="empty">در حال حاضر آگهی فعالی وجود ندارد.</p>{% endfor %}
+    <p>رزومه خود را برای ارزیابی‌های بعدی نیز می‌توانید <a href="{% url 'careers:apply' %}"><b>به‌صورت عمومی ارسال کنید</b></a>.</p>
+  </div>
+</div></div>
+{% endblock %}

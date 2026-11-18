@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}کیفیت و گواهینامه‌ها | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="کیفیت، ایمنی و محیط زیست" lead="سیستم مدیریت یکپارچه (IMS) و گواهینامه‌های بین‌المللی TÜV International." %}
+<div class="page"><div class="wrap">
+  <div class="cert-grid">
+    {% for c in certificates %}
+    <article class="cert">
+      {% if c.image %}<a href="{{ c.image.url }}" data-lightbox data-alt="{{ c.title }}"><img src="{{ c.image.url }}" alt="{{ c.title }}" loading="lazy"></a>{% endif %}
+      <div class="body">{% if c.code %}<div class="code" dir="ltr">{{ c.code }}</div>{% endif %}<strong>{{ c.title }}</strong>
+        {% if c.issuer %}<small class="muted" style="display:block">{{ c.issuer }}</small>{% endif %}{% if c.description %}<p class="muted" style="font-size:.85rem;margin:.5em 0 0">{{ c.description }}</p>{% endif %}</div>
+    </article>{% endfor %}
+  </div>
+  <div class="two-col" style="margin-top:56px">
+    <section class="card"><h3>سیستم مدیریت یکپارچه (IMS)</h3><div class="prose">{{ site.ims_text|clean_html }}</div>
+      <ul class="checks">{% for v in values.ims %}<li>{{ v.text }}</li>{% endfor %}</ul></section>
+    <section class="card"><h3>خط‌مشی ایمنی، بهداشت و محیط زیست</h3><div class="prose">{{ site.hse_text|clean_html }}</div>
+      <ul class="checks">{% for v in values.hse %}<li>{{ v.text }}</li>{% endfor %}</ul></section>
+  </div>
+</div></div>
+{% endblock %}

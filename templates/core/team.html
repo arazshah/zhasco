@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}تیم ما | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="تیم ما" lead="متخصصان با تجربه در آبیاری و زهکشی، آبخیزداری، GIS و نقشه‌برداری." %}
+<div class="page"><div class="wrap">
+  {% if leaders %}<div class="team-grid">{% for m in leaders %}{% include "partials/member.html" %}{% endfor %}</div>{% endif %}
+  {% if members %}<h2 style="margin-top:48px">سایر همکاران</h2><div class="team-grid">{% for m in members %}{% include "partials/member.html" %}{% endfor %}</div>{% endif %}
+  {% if not leaders and not members %}<p class="empty">اطلاعات تیم به‌زودی ثبت می‌شود.</p>{% endif %}
+</div></div>
+{% endblock %}

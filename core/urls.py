@@ -1,0 +1,13 @@
+from django.urls import path
+
+from core import views
+
+app_name = "core"
+urlpatterns = [
+    path("", views.home, name="home"),
+    path("about/", views.about, name="about"),
+    path("team/", views.team, name="team"),
+    path("quality/", views.quality, name="quality"),
+    path("rnd/", views.rnd, name="rnd"),
+    path("contact/", views.contact, name="contact"),
+]

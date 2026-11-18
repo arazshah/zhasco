@@ -1,0 +1,7 @@
+Django>=5.2,<5.3
+django-unfold>=0.110,<0.120
+whitenoise>=6.7,<7
+gunicorn>=23
+Pillow>=11
+nh3>=0.2.18
+jdatetime>=5

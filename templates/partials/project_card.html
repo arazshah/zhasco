@@ -1,0 +1,13 @@
+{% load zh %}
+<a class="pcard" href="{{ p.get_absolute_url }}">
+  <span class="pcard-top">
+    <span class="tag tag-{{ p.service.slug }}">{{ p.service.title }}</span>
+    <span class="status status-{{ p.status }}">{{ p.get_status_display }}</span>
+  </span>
+  <strong class="pcard-title">{{ p.title }}</strong>
+  <span class="pcard-meta">
+    <span>{{ p.province.name }}{% if p.county %} · {{ p.county }}{% endif %}</span>
+    <span>{{ p.client|truncatechars:48 }}</span>
+    {% if p.end_label %}<span>{{ p.end_label|fa }}</span>{% endif %}
+  </span>
+</a>

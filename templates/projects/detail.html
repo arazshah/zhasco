@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}{{ p.title|truncatechars:70 }} | {{ site.company_name }}{% endblock %}
+{% block description %}{{ p.title }} — {{ p.client }}، {{ p.province.name }}{% endblock %}
+{% block content %}
+<section class="page-head"><div class="wrap">
+  <nav class="crumbs"><a href="/">خانه</a><span>/</span><a href="{% url 'projects:list' %}">پروژه‌ها</a><span>/</span><a href="{{ p.province.get_absolute_url }}">{{ p.province.name }}</a></nav>
+  <span class="tag tag-{{ p.service.slug }}">{{ p.service.title }}</span>
+  <h1 style="margin-top:.4em">{{ p.title }}</h1>
+</div></section>
+<div class="page"><div class="wrap two-col">
+  <div>
+    {% if p.cover %}<img src="{{ p.cover.url }}" alt="{{ p.title }}" style="border-radius:14px;margin-bottom:24px">{% endif %}
+    {% if p.description %}<div class="prose">{{ p.description|clean_html }}</div>{% endif %}
+    {% if images %}<div class="gallery" style="margin-top:24px">{% for i in images %}<a href="{{ i.image.url }}" data-lightbox data-alt="{{ i.caption }}"><img src="{{ i.image.url }}" alt="{{ i.caption }}" loading="lazy"></a>{% endfor %}</div>{% endif %}
+    {% if related %}<h2 style="margin-top:40px">پروژه‌های مرتبط</h2><div class="pgrid">{% for p in related %}{% include "partials/project_card.html" %}{% endfor %}</div>{% endif %}
+  </div>
+  <aside class="card"><h3>مشخصات پروژه</h3>
+    <dl class="dl">
+      <dt>کارفرما</dt><dd>{{ p.client }}</dd>
+      <dt>استان</dt><dd>{{ p.province.name }}</dd>
+      {% if p.county %}<dt>شهرستان</dt><dd>{{ p.county }}</dd>{% endif %}
+      <dt>وضعیت</dt><dd><span class="status status-{{ p.status }}">{{ p.get_status_display }}</span></dd>
+      {% if p.status == 'completed' and p.end_label %}<dt>اتمام</dt><dd>{{ p.end_label|fa }}</dd>{% endif %}
+      {% if p.contract_date %}<dt>تاریخ قرارداد</dt><dd>{{ p.contract_date|fa }}</dd>{% endif %}
+      {% if p.show_contract_number and p.contract_number %}<dt>شماره قرارداد</dt><dd dir="ltr" style="text-align:right">{{ p.contract_number|fa }}</dd>{% endif %}
+      {% if p.scale %}<dt>مقیاس</dt><dd>{{ p.scale|fa }}</dd>{% endif %}
+    </dl></aside>
+</div></div>
+{% endblock %}

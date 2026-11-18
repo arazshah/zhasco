@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}{{ post.title }} | {{ site.company_name }}{% endblock %}
+{% block description %}{{ post.summary|default:post.title }}{% endblock %}
+{% block content %}
+<section class="page-head"><div class="wrap"><nav class="crumbs"><a href="/">خانه</a><span>/</span><a href="{% url 'news:list' %}">اخبار</a></nav>
+  <h1>{{ post.title }}</h1><p class="muted">{{ post.published_at|jdate }}</p></div></section>
+<div class="page"><div class="wrap">
+  {% if post.cover %}<img src="{{ post.cover.url }}" alt="" style="border-radius:14px;margin-bottom:24px;max-height:460px;width:100%;object-fit:cover">{% endif %}
+  <div class="prose">{{ post.body|clean_html }}</div>
+  {% if more %}<h2 style="margin-top:48px">مطالب دیگر</h2><div class="pgrid">{% for post in more %}{% include "partials/post_card.html" %}{% endfor %}</div>{% endif %}
+</div></div>
+{% endblock %}

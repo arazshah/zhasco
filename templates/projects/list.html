@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}پروژه‌ها{% if active_province %} در {{ active_province.name }}{% endif %} | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="پروژه‌های انجام‌شده" lead="فهرست پروژه‌های شرکت به تفکیک استان، حوزه و وضعیت." %}
+<div class="page"><div class="wrap">
+  <form class="filters" method="get" role="search">
+    <div class="field"><label for="q">جست‌وجو</label><input id="q" name="q" value="{{ f.q }}" placeholder="عنوان، کارفرما یا شهرستان"></div>
+    <div class="field"><label for="province">استان</label><select id="province" name="province"><option value="">همه استان‌ها</option>{% for p in provinces %}<option value="{{ p.slug }}" {% if f.province == p.slug %}selected{% endif %}>{{ p.name }} ({{ p.count|fa }})</option>{% endfor %}</select></div>
+    <div class="field"><label for="service">حوزه</label><select id="service" name="service"><option value="">همه حوزه‌ها</option>{% for s in services %}<option value="{{ s.slug }}" {% if f.service == s.slug %}selected{% endif %}>{{ s.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="status">وضعیت</label><select id="status" name="status"><option value="">همه</option><option value="ongoing" {% if f.status == 'ongoing' %}selected{% endif %}>در حال اجرا</option><option value="completed" {% if f.status == 'completed' %}selected{% endif %}>تکمیل‌شده</option></select></div>
+    <button class="btn" type="submit">اعمال</button>
+  </form>
+  <p class="result-count">{{ total|fa_num }} پروژه یافت شد</p>
+  {% if page.object_list %}
+  <div class="pgrid">{% for p in page.object_list %}{% include "partials/project_card.html" %}{% endfor %}</div>
+  {% else %}<p class="empty">پروژه‌ای با این فیلتر پیدا نشد.</p>{% endif %}
+  {% if page.paginator.num_pages > 1 %}
+  <nav class="pager" aria-label="صفحه‌بندی">
+    {% for n in page.paginator.page_range %}{% if n == page.number %}<span class="cur">{{ n|fa }}</span>{% else %}<a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ n }}">{{ n|fa }}</a>{% endif %}{% endfor %}
+  </nav>{% endif %}
+</div></div>
+{% endblock %}
