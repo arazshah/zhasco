@@ -10,24 +10,33 @@
 ## ۲. Persistent Storage (بسیار مهم)
 در تب **Storages** یک Volume با مسیر داخل کانتینر `/app/data` اضافه کنید. بدون این کار با هر دیپلوی، دیتابیس و تصاویر پاک می‌شود.
 
-## ۳. متغیرهای محیطی (Environment Variables)
+## ۳. متغیرهای محیطی
+**فقط یک متغیر الزامی است:**
+
 | نام | مقدار |
 |---|---|
-| `DJANGO_SECRET_KEY` | یک رشته تصادفی بلند (مثلاً `python -c "import secrets;print(secrets.token_urlsafe(60))"`) |
-| `DJANGO_ALLOWED_HOSTS` | `zhasco.ir,www.zhasco.ir` |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://zhasco.ir,https://www.zhasco.ir` |
-| `DJANGO_SUPERUSER_USERNAME` | نام کاربری مدیر |
-| `DJANGO_SUPERUSER_PASSWORD` | گذرواژه قوی (فقط برای ساخت اولین مدیر؛ پس از اولین اجرا می‌توانید حذفش کنید) |
-| `DJANGO_SUPERUSER_EMAIL` | اختیاری |
-| `WEB_CONCURRENCY` | اختیاری، تعداد workerها (پیش‌فرض ۲) |
+| `DJANGO_SECRET_KEY` | یک رشته تصادفی بلند، مثلاً خروجی `python3 -c "import secrets;print(secrets.token_urlsafe(60))"` |
 
-نمونه در `.env.example` هست. **`DJANGO_DEBUG` را تنظیم نکنید** (پیش‌فرض خاموش است).
+بقیه مقدار پیش‌فرض دارند و فقط در صورت نیاز تغییرشان دهید:
+
+| نام | پیش‌فرض |
+|---|---|
+| `DJANGO_ALLOWED_HOSTS` | `zhasco.ir,www.zhasco.ir,localhost,127.0.0.1` |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | `https://zhasco.ir,https://www.zhasco.ir` |
+| `DJANGO_SUPERUSER_USERNAME` / `DJANGO_SUPERUSER_PASSWORD` | `admin` / `ZhAS-Change-Me-1405` |
+| `WEB_CONCURRENCY` | `2` |
+
+**`DJANGO_DEBUG` را تنظیم نکنید.**
+
+### ورود اول به داشبورد
+اولین مدیر خودکار با نام کاربری `admin` و رمز اولیه `ZhAS-Change-Me-1405` ساخته می‌شود. به `/admin/` بروید؛ سایت شما را **مجبور به تغییر رمز** می‌کند و تا آن موقع به هیچ بخشی دسترسی نمی‌دهد.
+چون رمز اولیه در ریپو نوشته شده، **بلافاصله بعد از دیپلوی** وارد شوید و رمز را عوض کنید. (اگر می‌خواهید رمز اولیه دیگری باشد، `DJANGO_SUPERUSER_PASSWORD` را قبل از اولین دیپلوی بگذارید.)
 
 ## ۴. دیپلوی
 با زدن Deploy، در هر شروع کانتینر خودکار این کارها انجام می‌شود:
 - `migrate`
 - `seed_initial_data`: فقط جدول‌های **خالی** را با داده اولیه (۱۵۲ پروژه، تیم، دفاتر، گواهینامه‌ها، متن‌ها) پر می‌کند و هرگز محتوای ویرایش‌شده در داشبورد را بازنویسی نمی‌کند.
-- `ensure_superuser`: اگر مدیری وجود نداشت، از روی متغیرهای بالا می‌سازد.
+- `ensure_superuser`: اگر مدیری وجود نداشت، مدیر اولیه را (با اجبار به تغییر رمز) می‌سازد.
 
 سپس سایت روی `https://zhasco.ir` و داشبورد روی `https://zhasco.ir/admin/` در دسترس است.
 
@@ -40,4 +49,4 @@
 ## ۷. عیب‌یابی
 - خطای `DisallowedHost` یا `CSRF verification failed`: دو متغیر `DJANGO_ALLOWED_HOSTS` و `DJANGO_CSRF_TRUSTED_ORIGINS` را با دامنه واقعی بررسی کنید.
 - تصاویر بعد از دیپلوی نیستند: Volume روی `/app/data` تنظیم نشده است.
-- ورود به داشبورد ممکن نیست: متغیرهای `DJANGO_SUPERUSER_*` را بگذارید و Redeploy کنید، یا در Terminal کانتینر: `python manage.py createsuperuser`.
+- ورود به داشبورد ممکن نیست یا رمز را فراموش کرده‌اید: در Terminal کانتینر `python manage.py changepassword admin` را اجرا کنید.
