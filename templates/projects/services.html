@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}خدمات | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="خدمات مشاوره و فنی-مهندسی" lead="از مطالعات امکان‌سنجی و طراحی تا نظارت بر ساخت و مدیریت پروژه." %}
+<div class="page"><div class="wrap"><div class="svc-grid">
+  {% for s in services %}<a class="svc" href="{{ s.get_absolute_url }}">
+    <span class="svc-media svc-{{ s.slug }}">{% if s.image %}<img src="{{ s.image.url }}" alt="" loading="lazy">{% else %}{% include "partials/icon.html" with name=s.icon %}{% endif %}</span>
+    <strong>{{ s.title }}</strong><span>{{ s.summary }}</span></a>{% endfor %}
+</div></div></div>
+{% endblock %}

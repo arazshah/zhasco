@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}تماس با ما | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="تماس با ما" lead="از طریق فرم زیر یا دفاتر ما با ما در ارتباط باشید." %}
+<div class="page"><div class="wrap two-col">
+  <div class="stack">
+    {% for o in offices %}
+    <article class="card office-card" id="office-{{ o.pk }}">
+      {% if o.photo %}<img src="{{ o.photo.url }}" alt="{{ o.name }}" loading="lazy">{% endif %}
+      <div><h3>{{ o.name }} — {{ o.city }}{% if o.is_headquarters %}<span class="hq">مرکزی</span>{% endif %}</h3>
+        <p>{{ o.address }}</p>
+        <dl class="dl">
+          {% if o.phones %}<dt>تلفن</dt><dd dir="ltr" style="text-align:right">{% for ph in o.phone_list %}<a href="tel:{{ ph }}">{{ ph|fa }}</a>{% if not forloop.last %} ، {% endif %}{% endfor %}</dd>{% endif %}
+          {% if o.fax %}<dt>فکس</dt><dd dir="ltr" style="text-align:right">{{ o.fax|fa }}</dd>{% endif %}
+          {% if o.email %}<dt>ایمیل</dt><dd dir="ltr" style="text-align:right">{{ o.email }}</dd>{% endif %}
+        </dl></div>
+    </article>{% endfor %}
+    <p class="muted">ایمیل: <a href="mailto:{{ site.email }}">{{ site.email }}</a> · وب‌سایت: <span dir="ltr">{{ site.website }}</span></p>
+  </div>
+  <section class="card">
+    <h2>ارسال پیام</h2>
+    {% if messages %}<ul class="msgs">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+    <form method="post" class="form" novalidate>{% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="row"><div class="field">{{ form.name.label_tag }}{{ form.name }}{{ form.name.errors }}</div><div class="field">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div></div>
+      <div class="field">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div>
+      <div class="field">{{ form.subject.label_tag }}{{ form.subject }}</div>
+      <div class="field">{{ form.message.label_tag }}{{ form.message }}{{ form.message.errors }}</div>
+      <div class="hp" aria-hidden="true">{{ form.website }}</div>
+      <button class="btn" type="submit">ارسال پیام</button>
+    </form>
+  </section>
+</div></div>
+{% endblock %}

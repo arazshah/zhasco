@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static zh %}
+{% block bodyclass %}home{% endblock %}
+{% block content %}
+<section class="hero" aria-labelledby="hero-title">
+  <div class="contours" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-side" id="hero-side">
+      <div class="hero-intro" data-intro>
+        <p class="eyebrow">پروژه‌های انجام‌شده در سراسر ایران</p>
+        <h1 id="hero-title">{{ site.hero_title }}</h1>
+        <p class="lead">{{ site.hero_text }}</p>
+        <dl class="hero-stats">
+          <div><dt>سال تجربه</dt><dd data-count="{{ years_active }}">{{ years_active|fa }}</dd></div>
+          <div><dt>پروژه</dt><dd data-count="{{ stats.projects }}">{{ stats.projects|fa_num }}</dd></div>
+          <div><dt>استان</dt><dd data-count="{{ stats.provinces }}">{{ stats.provinces|fa }}</dd></div>
+          <div><dt>در حال اجرا</dt><dd data-count="{{ stats.ongoing }}">{{ stats.ongoing|fa }}</dd></div>
+        </dl>
+        <ul class="legend" aria-label="راهنمای نقشه">
+          <li><i class="sw lv0"></i>بدون پروژه</li>
+          <li><i class="sw lv1"></i>تا ۴ پروژه</li>
+          <li><i class="sw lv2"></i>۵ تا ۱۴</li>
+          <li><i class="sw lv3"></i>۱۵ تا ۳۹</li>
+          <li><i class="sw lv4"></i>۴۰ و بیشتر</li>
+          <li><i class="sw office"></i>دفتر شرکت</li>
+        </ul>
+        <div class="chips">
+          {% for p in active_provinces %}<a href="{{ p.get_absolute_url }}" class="chip" data-chip="{{ p.slug }}">{{ p.name }} <b>{{ p.count|fa }}</b></a>{% endfor %}
+        </div>
+      </div>
+
+      <div class="panel" data-panel hidden aria-live="polite">
+        <button class="panel-close" data-close aria-label="بستن">×</button>
+        <p class="eyebrow">پروژه‌های استان</p>
+        <h2 data-p-name></h2>
+        <p class="panel-sum" data-p-sum></p>
+        <ul class="panel-list" data-p-list></ul>
+        <a class="btn btn-block" data-p-all href="#">مشاهده همه پروژه‌ها با فیلتر</a>
+      </div>
+    </div>
+
+    <div class="hero-map">
+      <div class="map-tip" data-tip hidden></div>
+      {% include "partials/iran_map.html" %}
+      <p class="map-hint">برای دیدن پروژه‌ها روی استان‌های رنگی کلیک کنید</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="sec-head"><div><p class="eyebrow">حوزه‌های تخصصی</p><h2>خدماتی که ارائه می‌کنیم</h2></div>
+      <a class="more" href="{% url 'projects:services' %}">همه خدمات ←</a></header>
+    <div class="svc-grid">
+      {% for s in services %}
+      <a class="svc" href="{{ s.get_absolute_url }}">
+        <span class="svc-media svc-{{ s.slug }}">{% if s.image %}<img src="{{ s.image.url }}" alt="" loading="lazy">{% else %}{% include "partials/icon.html" with name=s.icon %}{% endif %}</span>
+        <strong>{{ s.title }}</strong>
+        <span>{{ s.summary }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if featured %}
+<section class="section alt">
+  <div class="wrap">
+    <header class="sec-head"><div><p class="eyebrow">گزیده‌ای از کارنامه</p><h2>پروژه‌های شاخص</h2></div>
+      <a class="more" href="{% url 'projects:list' %}">همه پروژه‌ها ←</a></header>
+    <div class="pgrid">{% for p in featured %}{% include "partials/project_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="wrap quality-band">
+    <div>
+      <p class="eyebrow">کیفیت، ایمنی و محیط زیست</p>
+      <h2>دارای گواهینامه‌های بین‌المللی</h2>
+      <p class="lead">سیستم مدیریت یکپارچه شرکت با گواهینامه‌های TÜV International استقرار یافته و تعهد ما به کیفیت و ایمنی را تضمین می‌کند.</p>
+      <a class="btn btn-ghost" href="{% url 'core:quality' %}">مشاهده گواهینامه‌ها</a>
+    </div>
+    <ul class="iso-list">
+      {% for c in certificates %}<li><strong dir="ltr">{{ c.code }}</strong><span>{{ c.title }}</span></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+
+{% if clients %}
+<section class="section alt slim">
+  <div class="wrap">
+    <p class="eyebrow center">همراهان ما</p>
+    <ul class="client-list">{% for c in clients %}<li>{% if c.logo %}<img src="{{ c.logo.url }}" alt="{{ c.name }}" loading="lazy">{% else %}{{ c.name }}{% endif %}</li>{% endfor %}</ul>
+  </div>
+</section>
+{% endif %}
+
+{% if latest_posts %}
+<section class="section">
+  <div class="wrap">
+    <header class="sec-head"><div><p class="eyebrow">تازه‌ها</p><h2>اخبار و مقالات</h2></div><a class="more" href="{% url 'news:list' %}">همه اخبار ←</a></header>
+    <div class="pgrid">{% for post in latest_posts %}{% include "partials/post_card.html" %}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+
+<section class="cta">
+  <div class="wrap"><h2>پروژه‌ای در ذهن دارید؟</h2><p>با تیم مهندسی ما گفتگو کنید؛ از مطالعه اولیه تا نظارت بر اجرا در کنار شما هستیم.</p>
+    <a class="btn btn-light" href="{% url 'core:contact' %}">درخواست مشاوره</a></div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/map.js' %}" defer></script>{% endblock %}

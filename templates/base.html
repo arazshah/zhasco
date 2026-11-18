@@ -1,0 +1,85 @@
+{% load static zh %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.company_name }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ site.meta_description|default:site.tagline }}{% endblock %}">
+  <meta name="theme-color" content="#0d2a3a">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fa_IR">
+  <meta property="og:site_name" content="{{ site.company_name }}">
+  <meta property="og:title" content="{% block ogtitle %}{{ site.company_name }}{% endblock %}">
+  <meta property="og:description" content="{{ site.meta_description|default:site.tagline }}">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo-mark.png' %}">
+  <link rel="icon" href="{% static 'img/favicon.ico' %}" sizes="any">
+  <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
+  <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  <link rel="preload" href="{% static 'fonts/Vazirmatn-var.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"{{ site.company_name }}","alternateName":"{{ site.company_name_en }}","url":"{{ request.scheme }}://{{ request.get_host }}/","logo":"{{ request.scheme }}://{{ request.get_host }}{% static 'img/logo-mark.png' %}","foundingDate":"2010"}</script>
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+<a class="skip" href="#main">پرش به محتوا</a>
+<header class="site-header" id="top">
+  <div class="wrap bar">
+    <a class="brand" href="{% url 'core:home' %}" aria-label="{{ site.company_name }}">
+      <img src="{% static 'img/logo-full.png' %}" alt="{{ site.company_name }}" height="46">
+    </a>
+    <button class="burger" aria-label="منو" aria-expanded="false" aria-controls="nav"><span></span><span></span><span></span></button>
+    <nav id="nav" class="nav" aria-label="منوی اصلی">
+      {% with p=request.resolver_match.url_name n=request.resolver_match.namespace %}
+      <a href="{% url 'core:home' %}" {% if p == 'home' %}aria-current="page"{% endif %}>خانه</a>
+      <a href="{% url 'core:about' %}" {% if p == 'about' %}aria-current="page"{% endif %}>درباره ما</a>
+      <a href="{% url 'projects:services' %}" {% if p == 'services' or p == 'service_detail' %}aria-current="page"{% endif %}>خدمات</a>
+      <a href="{% url 'projects:list' %}" {% if n == 'projects' and p == 'list' or p == 'detail' and n == 'projects' %}aria-current="page"{% endif %}>پروژه‌ها</a>
+      <a href="{% url 'core:team' %}" {% if p == 'team' %}aria-current="page"{% endif %}>تیم ما</a>
+      <a href="{% url 'core:quality' %}" {% if p == 'quality' %}aria-current="page"{% endif %}>کیفیت و گواهینامه‌ها</a>
+      <a href="{% url 'news:list' %}" {% if n == 'news' %}aria-current="page"{% endif %}>اخبار</a>
+      <a class="btn btn-sm nav-cta" href="{% url 'core:contact' %}">تماس با ما</a>
+      {% endwith %}
+    </nav>
+  </div>
+</header>
+
+<main id="main">{% block content %}{% endblock %}</main>
+
+<footer class="site-footer">
+  <div class="wrap foot-grid">
+    <div>
+      <div class="foot-logo"><img src="{% static 'img/logo-full.png' %}" alt="{{ site.company_name }}" height="44"></div>
+      <p>{{ site.tagline }}</p>
+      <p class="muted-l">{{ site.legal_form }} · شماره ثبت {{ site.registration_number|fa }}</p>
+    </div>
+    <div>
+      <h3>دسترسی سریع</h3>
+      <ul>
+        <li><a href="{% url 'projects:list' %}">پروژه‌ها</a></li>
+        <li><a href="{% url 'projects:services' %}">خدمات</a></li>
+        <li><a href="{% url 'core:rnd' %}">پژوهش و توسعه</a></li>
+        <li><a href="{% url 'careers:list' %}">فرصت‌های شغلی</a></li>
+        <li><a href="{% url 'core:contact' %}">تماس با ما</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3>دفاتر ما</h3>
+      <ul>
+        {% for o in footer_offices %}<li><a href="{% url 'core:contact' %}#office-{{ o.pk }}">{{ o.name }} — {{ o.city }}</a></li>{% endfor %}
+      </ul>
+    </div>
+    <div>
+      <h3>ارتباط</h3>
+      <ul>
+        {% if site.email %}<li><a href="mailto:{{ site.email }}" dir="ltr">{{ site.email }}</a></li>{% endif %}
+        {% if site.website %}<li dir="ltr">{{ site.website }}</li>{% endif %}
+        {% for label, url in socials %}<li><a href="{{ url }}" rel="noopener" target="_blank">{{ label }}</a></li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="wrap foot-bottom">© {{ jalali_year|fa }} {{ site.company_name }}. همه حقوق محفوظ است.</div>
+</footer>
+<script src="{% static 'js/site.js' %}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}{% if job %}{{ job.title }}{% else %}ارسال رزومه{% endif %} | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title=job.title|default:"ارسال رزومه" lead=job.location %}
+<div class="page"><div class="wrap two-col">
+  <div class="prose">{% if job %}<h2>شرح وظایف</h2>{{ job.description|clean_html }}{% if job.requirements %}<h2>شرایط و مهارت‌ها</h2>{{ job.requirements|clean_html }}{% endif %}{% else %}<p>رزومه خود را ارسال کنید؛ در صورت وجود موقعیت مناسب با شما تماس می‌گیریم.</p>{% endif %}</div>
+  <section class="card"><h2>ارسال رزومه</h2>
+    {% if messages %}<ul class="msgs">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+    <form method="post" enctype="multipart/form-data" class="form" novalidate>{% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="field">{{ form.name.label_tag }}{{ form.name }}{{ form.name.errors }}</div>
+      <div class="row"><div class="field">{{ form.phone.label_tag }}{{ form.phone }}{{ form.phone.errors }}</div><div class="field">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div></div>
+      <div class="field">{{ form.field_of_study.label_tag }}{{ form.field_of_study }}</div>
+      <div class="field">{{ form.message.label_tag }}{{ form.message }}</div>
+      <div class="field">{{ form.resume.label_tag }}{{ form.resume }}{{ form.resume.errors }}<small class="muted">PDF یا Word، حداکثر ۵ مگابایت</small></div>
+      <div class="hp" aria-hidden="true">{{ form.website }}</div>
+      <button class="btn" type="submit">ارسال رزومه</button>
+    </form></section>
+</div></div>
+{% endblock %}

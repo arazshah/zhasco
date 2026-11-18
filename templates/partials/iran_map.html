@@ -1,0 +1,23 @@
+{% load zh l10n %}{% localize off %}
+<svg class="iran-map" viewBox="0 0 {{ map_meta.width }} {{ map_meta.height }}" role="group" aria-label="نقشه استان‌های ایران؛ استان‌های رنگی دارای پروژه هستند" data-map>
+  <g class="provinces">
+    {% for p in provinces %}
+      {% if p.count %}
+      <a href="{{ p.get_absolute_url }}" class="prov is-active lv{{ p.count|level }}" data-slug="{{ p.slug }}" data-name="{{ p.name }}" data-n="{{ p.count }}" aria-label="{{ p.name }}: {{ p.count|fa_num }} پروژه">
+        <path d="{{ p.svg_path }}"/>
+      </a>
+      {% else %}
+      <g class="prov"><path d="{{ p.svg_path }}"><title>{{ p.name }}</title></path></g>
+      {% endif %}
+    {% endfor %}
+  </g>
+  <g class="labels" aria-hidden="true">
+    {% for p in provinces %}{% if p.count %}<text x="{{ p.label_x }}" y="{{ p.label_y }}" text-anchor="middle">{{ p.name }}</text>{% endif %}{% endfor %}
+  </g>
+  <g class="offices" aria-hidden="true">
+    {% for o in offices %}
+      <g transform="translate({{ o.map_x }} {{ o.map_y }})"><circle class="pulse" r="6"/><circle class="dot" r="5"/><title>{{ o.name }} — {{ o.city }}</title></g>
+    {% endfor %}
+  </g>
+</svg>
+{% endlocalize %}

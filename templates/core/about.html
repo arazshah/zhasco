@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}درباره ما | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="درباره ژرف آذران صدر" lead=site.tagline crumbs=None %}
+<div class="page"><div class="wrap">
+  <div class="two-col">
+    <div class="prose">{{ site.about_text|clean_html }}</div>
+    <aside class="card">
+      <h3>شناسنامه شرکت</h3>
+      <dl class="dl">
+        <dt>نام</dt><dd>{{ site.company_name }}</dd>
+        <dt>نوع شرکت</dt><dd>{{ site.legal_form }}</dd>
+        <dt>شماره ثبت</dt><dd>{{ site.registration_number|fa }}</dd>
+        <dt>سال تأسیس</dt><dd>{{ site.founded_year|fa }}</dd>
+        <dt>سابقه</dt><dd>{{ years_active|fa }} سال</dd>
+      </dl>
+    </aside>
+  </div>
+
+  {% if timeline %}
+  <h2 style="margin-top:56px">مسیر رشد شرکت</h2>
+  <ol class="timeline">{% for e in timeline %}<li><span class="yr">{{ e.year|fa }}</span> — <strong>{{ e.title }}</strong><p class="muted">{{ e.text }}</p></li>{% endfor %}</ol>
+  {% endif %}
+
+  <div class="two-col" style="margin-top:48px">
+    {% if values.policy %}<section class="card"><h3>سیاست‌های راهبردی</h3><ul class="checks">{% for v in values.policy %}<li>{{ v.text }}</li>{% endfor %}</ul></section>{% endif %}
+    {% if values.strategy %}<section class="card"><h3>استراتژی تحقق اهداف</h3><ul class="checks">{% for v in values.strategy %}<li>{{ v.text }}</li>{% endfor %}</ul></section>{% endif %}
+  </div>
+
+  <h2 style="margin-top:56px">اهداف استراتژیک</h2>
+  <div class="svc-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    {% if values.goal_long %}<section class="card"><h3>بلندمدت</h3><ul class="checks">{% for v in values.goal_long %}<li>{{ v.text }}</li>{% endfor %}</ul></section>{% endif %}
+    {% if values.goal_mid %}<section class="card"><h3>میان‌مدت</h3><ul class="checks">{% for v in values.goal_mid %}<li>{{ v.text }}</li>{% endfor %}</ul></section>{% endif %}
+    {% if values.goal_short %}<section class="card"><h3>کوتاه‌مدت</h3><ul class="checks">{% for v in values.goal_short %}<li>{{ v.text }}</li>{% endfor %}</ul></section>{% endif %}
+  </div>
+
+  {% if org_has_data %}
+  <h2 style="margin-top:56px">ساختار سازمانی</h2>
+  <div class="org-wrap"><div class="org">
+    {% for r in org_roots %}
+    <ul><li class="root"><div class="node"><b>{{ r.title }}</b>{% if r.person %}<span>{{ r.person }}</span>{% endif %}</div>
+      {% if r.children.all %}<ul>{% for c in r.children.all %}<li><div class="node"><b>{{ c.title }}</b>{% if c.person %}<span>{{ c.person }}</span>{% endif %}</div>
+        {% if c.children.all %}<ul>{% for g in c.children.all %}<li><div class="node"><b>{{ g.title }}</b>{% if g.person %}<span>{{ g.person }}</span>{% endif %}</div></li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>{% endif %}
+    </li></ul>{% endfor %}
+  </div></div>
+  {% endif %}
+</div></div>
+{% endblock %}

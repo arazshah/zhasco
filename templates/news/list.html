@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}اخبار و مقالات | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="اخبار و مقالات" %}
+<div class="page"><div class="wrap">
+  {% if page.object_list %}<div class="pgrid">{% for post in page.object_list %}{% include "partials/post_card.html" %}{% endfor %}</div>
+  {% else %}<p class="empty">هنوز خبری منتشر نشده است.</p>{% endif %}
+  {% if page.paginator.num_pages > 1 %}<nav class="pager">{% for n in page.paginator.page_range %}{% if n == page.number %}<span class="cur">{{ n|fa }}</span>{% else %}<a href="?page={{ n }}">{{ n|fa }}</a>{% endif %}{% endfor %}</nav>{% endif %}
+</div></div>
+{% endblock %}

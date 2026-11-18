@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}پژوهش و توسعه | {{ site.company_name }}{% endblock %}
+{% block content %}
+{% include "partials/page_head.html" with title="واحد پژوهش و توسعه (R&D)" lead="بانک اطلاعاتی غنی علمی و صنعتی در خدمت پروژه‌ها و پژوهش‌های مشترک." %}
+<div class="page"><div class="wrap">
+  <div class="stat-row">{% for r in resources %}<div class="stat"><b>{% if r.plus %}+{% endif %}{{ r.value|fa_num }}</b>{{ r.title }}</div>{% endfor %}</div>
+  <div class="prose">{{ site.rnd_text|clean_html }}</div>
+</div></div>
+{% endblock %}

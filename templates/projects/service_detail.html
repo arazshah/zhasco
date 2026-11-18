@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load zh %}
+{% block title %}{{ s.title }} | {{ site.company_name }}{% endblock %}
+{% block description %}{{ s.summary }}{% endblock %}
+{% block content %}
+<section class="page-head"><div class="wrap">
+  <nav class="crumbs"><a href="/">خانه</a><span>/</span><a href="{% url 'projects:services' %}">خدمات</a></nav>
+  <h1>{{ s.title }}</h1><p class="lead">{{ s.summary }}</p></div></section>
+<div class="page"><div class="wrap two-col">
+  <div>
+    {% if s.image %}<img src="{{ s.image.url }}" alt="{{ s.title }}" style="border-radius:14px;margin-bottom:24px;width:100%">{% endif %}
+    <div class="prose">{{ s.body|clean_html }}</div>
+    {% if s.bullet_list %}<h2 style="margin-top:32px">دامنه خدمات</h2><ul class="checks">{% for b in s.bullet_list %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  <aside class="stack">
+    <div class="card"><h3>در این حوزه</h3><p><b style="font-size:2rem;color:var(--teal-d)">{{ project_count|fa_num }}</b> پروژه انجام یا در حال انجام</p>
+      <a class="btn btn-block" href="{% url 'projects:list' %}?service={{ s.slug }}">مشاهده پروژه‌ها</a></div>
+    <div class="card"><h3>سایر خدمات</h3><ul class="checks">{% for o in others %}<li><a href="{{ o.get_absolute_url }}">{{ o.title }}</a></li>{% endfor %}</ul></div>
+  </aside>
+</div>
+{% if projects %}<div class="wrap" style="margin-top:48px"><h2>نمونه پروژه‌ها</h2><div class="pgrid">{% for p in projects %}{% include "partials/project_card.html" %}{% endfor %}</div></div>{% endif %}
+</div>
+{% endblock %}

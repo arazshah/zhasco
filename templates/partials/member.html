@@ -1,0 +1,5 @@
+<article class="member">
+  <div class="ph">{% if m.photo %}<img src="{{ m.photo.url }}" alt="{{ m.name }}" loading="lazy">{% else %}{{ m.initials }}{% endif %}</div>
+  <div class="body"><h3>{{ m.name }}</h3><p class="pos">{{ m.position }}</p>
+    {% if m.degree %}<small>{{ m.degree }}</small>{% endif %}{% if m.university %}<small>{{ m.university }}</small>{% endif %}</div>
+</article>

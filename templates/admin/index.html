@@ -1,0 +1,55 @@
+{% extends 'admin/base.html' %}
+{% load i18n zh %}
+
+{% block title %}داشبورد | {{ site_title }}{% endblock %}
+{% block branding %}{% include "unfold/helpers/site_branding.html" %}{% endblock %}
+
+{% block content %}
+<div class="zh-dash">
+  <div class="zh-kpis">
+    {% for k in kpis %}
+      <div class="zh-kpi">
+        <span class="material-symbols-outlined">{{ k.icon }}</span>
+        <div><strong>{{ k.value|fa_num }}</strong><small>{{ k.label }}</small></div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="zh-grid">
+    <section class="zh-card">
+      <header><h2>پروژه‌ها به تفکیک استان</h2><a href="{% url 'admin:projects_project_changelist' %}">مدیریت پروژه‌ها ←</a></header>
+      {% for r in by_province %}
+        <div class="zh-bar"><span>{{ r.name }}</span><div><i style="width: {{ r.pct }}%"></i></div><b>{{ r.n|fa_num }}</b></div>
+      {% empty %}<p class="zh-muted">هنوز پروژه‌ای ثبت نشده است.</p>{% endfor %}
+    </section>
+
+    <section class="zh-card">
+      <header><h2>پروژه‌ها به تفکیک حوزه</h2></header>
+      {% for r in by_service %}
+        <div class="zh-row"><span>{{ r.service__title }}</span><b>{{ r.n|fa_num }}</b></div>
+      {% endfor %}
+      {% if unpublished %}<p class="zh-muted">{{ unpublished|fa_num }} پروژه منتشر نشده است.</p>{% endif %}
+    </section>
+
+    <section class="zh-card">
+      <header><h2>آخرین پیام‌های تماس</h2><a href="{% url 'admin:core_contactmessage_changelist' %}">همه پیام‌ها ←</a></header>
+      {% for m in recent_messages %}
+        <a class="zh-row zh-link" href="{% url 'admin:core_contactmessage_change' m.pk %}">
+          <span>{% if not m.is_read %}<i class="zh-dot"></i>{% endif %}{{ m.name }} — {{ m.subject|default:"بدون موضوع" }}</span>
+          <small>{{ m.created_at|jdate:"short" }}</small>
+        </a>
+      {% empty %}<p class="zh-muted">پیامی دریافت نشده است.</p>{% endfor %}
+    </section>
+
+    <section class="zh-card">
+      <header><h2>آخرین رزومه‌ها</h2><a href="{% url 'admin:careers_jobapplication_changelist' %}">همه رزومه‌ها ←</a></header>
+      {% for a in recent_applications %}
+        <a class="zh-row zh-link" href="{% url 'admin:careers_jobapplication_change' a.pk %}">
+          <span>{% if not a.is_read %}<i class="zh-dot"></i>{% endif %}{{ a.name }} — {{ a.posting|default:"درخواست عمومی" }}</span>
+          <small>{{ a.created_at|jdate:"short" }}</small>
+        </a>
+      {% empty %}<p class="zh-muted">رزومه‌ای دریافت نشده است.</p>{% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock %}

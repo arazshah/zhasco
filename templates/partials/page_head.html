@@ -1,0 +1,7 @@
+<section class="page-head">
+  <div class="wrap">
+    {% if crumbs %}<nav class="crumbs" aria-label="مسیر"><a href="/">خانه</a>{% for label, url in crumbs %}<span>/</span>{% if url %}<a href="{{ url }}">{{ label }}</a>{% else %}<span>{{ label }}</span>{% endif %}{% endfor %}</nav>{% endif %}
+    <h1>{{ title }}</h1>
+    {% if lead %}<p class="lead">{{ lead }}</p>{% endif %}
+  </div>
+</section>

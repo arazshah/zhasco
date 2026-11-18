@@ -1,0 +1,7 @@
+{% load zh %}
+<a class="pcard post" href="{{ post.get_absolute_url }}">
+  {% if post.cover %}<img src="{{ post.cover.url }}" alt="" loading="lazy">{% endif %}
+  <span class="pcard-meta"><span>{{ post.published_at|jdate }}</span></span>
+  <strong class="pcard-title">{{ post.title }}</strong>
+  {% if post.summary %}<span class="muted">{{ post.summary|truncatechars:130 }}</span>{% endif %}
+</a>
