@@ -26,7 +26,7 @@ if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = "dev-insecure-key-change-me"
     else:
-        raise RuntimeError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off.")
+        raise RuntimeError("DJANGO_SECRET_KEY is not set. Add it in the environment (see DEPLOY.md).")
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "zhasco.ir,www.zhasco.ir,localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "https://zhasco.ir,https://www.zhasco.ir")
@@ -59,6 +59,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.ForcePasswordChangeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

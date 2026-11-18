@@ -240,3 +240,15 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"{self.name} — {self.subject or 'بدون موضوع'}"
+
+
+class InitialPassword(models.Model):
+    """Remembers the hash of a bootstrap password; while the user's password still equals it,
+    the dashboard forces a password change (see core.middleware)."""
+
+    user = models.OneToOneField("auth.User", on_delete=models.CASCADE, related_name="initial_password")
+    password_hash = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "رمز اولیه"
+        verbose_name_plural = "رمزهای اولیه"

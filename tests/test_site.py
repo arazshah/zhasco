@@ -101,3 +101,23 @@ class SiteTests(TestCase):
     def test_seed_is_idempotent(self):
         call_command("seed_initial_data", verbosity=0)
         self.assertEqual(Project.objects.count(), 152)
+
+
+class FirstLoginTests(TestCase):
+    def test_bootstrap_admin_must_change_password(self):
+        call_command("ensure_superuser", verbosity=0)
+        self.assertTrue(self.client.login(username="admin", password="ZhAS-Change-Me-1405"))
+        r = self.client.get("/admin/")
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r["Location"], reverse("admin:password_change"))
+        self.assertEqual(self.client.get(reverse("admin:password_change")).status_code, 200)
+        r = self.client.post(reverse("admin:password_change"), {
+            "old_password": "ZhAS-Change-Me-1405", "new_password1": "Mine-Strong-Pass-77", "new_password2": "Mine-Strong-Pass-77"})
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(self.client.get("/admin/").status_code, 200)
+
+    def test_existing_superuser_is_not_touched(self):
+        from django.contrib.auth import get_user_model
+        get_user_model().objects.create_superuser("owner", "", "OwnerPass-12345")
+        call_command("ensure_superuser", verbosity=0)
+        self.assertFalse(get_user_model().objects.filter(username="admin").exists())
