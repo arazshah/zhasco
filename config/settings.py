@@ -202,7 +202,9 @@ UNFOLD = {
                 "title": "ارتباطات",
                 "separator": True,
                 "items": [
-                    {"title": "پیام‌های تماس", "icon": "mail", "link": reverse_lazy("admin:core_contactmessage_changelist"),
+                    {"title": "صندوق ایمیل", "icon": "inbox", "link": reverse_lazy("admin:core_mailmessage_changelist"),
+                     "badge": "core.dashboard.unread_mail_badge"},
+                    {"title": "پیام‌های فرم تماس", "icon": "mail", "link": reverse_lazy("admin:core_contactmessage_changelist"),
                      "badge": "core.dashboard.unread_messages_badge"},
                     {"title": "آگهی‌های شغلی", "icon": "work", "link": reverse_lazy("admin:careers_jobposting_changelist")},
                     {"title": "رزومه‌های دریافتی", "icon": "description", "link": reverse_lazy("admin:careers_jobapplication_changelist"),
@@ -224,3 +226,19 @@ UNFOLD = {
 }
 LOGIN_URL = "admin:login"
 LOGIN_REDIRECT_URL = "/admin/"
+
+# --- company mailbox (info@zhasco.ir on Chabokan) --------------------------
+# Only MAIL_PASSWORD must be provided; without it the dashboard mail section explains what is missing.
+MAIL_USER = os.environ.get("MAIL_USER", "info@zhasco.ir")
+MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+MAIL_IMAP_HOST = os.environ.get("MAIL_IMAP_HOST", "t1.mail.chabokan.net")
+MAIL_IMAP_PORT = int(os.environ.get("MAIL_IMAP_PORT", "993"))
+MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "ژرف آذران صدر")
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("MAIL_SMTP_HOST", "t1.mail.chabokan.net")
+EMAIL_PORT = int(os.environ.get("MAIL_SMTP_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = MAIL_USER
+EMAIL_HOST_PASSWORD = MAIL_PASSWORD
+EMAIL_TIMEOUT = 20
+DEFAULT_FROM_EMAIL = f"{MAIL_FROM_NAME} <{MAIL_USER}>"
