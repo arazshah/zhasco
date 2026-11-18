@@ -8,10 +8,11 @@ from email.utils import parseaddr, parsedate_to_datetime
 
 import nh3
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, get_connection
 from django.utils import timezone
 
-from core.models import MailMessage, MailSync
+from core import secrets as secretbox
+from core.models import MailMessage, MailSettings, MailSync
 
 log = logging.getLogger(__name__)
 FIRST_SYNC_LIMIT = 100
@@ -25,8 +26,43 @@ class MailError(Exception):
     pass
 
 
+def conf():
+    """Mailbox settings: values saved in the dashboard win; environment variables are the fallback."""
+    db = MailSettings.load()
+    return {
+        "user": db.user or settings.MAIL_USER,
+        "password": secretbox.decrypt(db.password_encrypted) or settings.MAIL_PASSWORD,
+        "from_name": db.from_name or settings.MAIL_FROM_NAME,
+        "imap_host": db.imap_host or settings.MAIL_IMAP_HOST, "imap_port": db.imap_port or settings.MAIL_IMAP_PORT,
+        "smtp_host": db.smtp_host or settings.EMAIL_HOST, "smtp_port": db.smtp_port or settings.EMAIL_PORT,
+    }
+
+
 def configured():
-    return bool(settings.MAIL_USER and settings.MAIL_PASSWORD)
+    c = conf()
+    return bool(c["user"] and c["password"])
+
+
+def test_connection():
+    """Try IMAP and SMTP logins. Returns (ok, message)."""
+    import smtplib
+    c = conf()
+    if not configured():
+        return False, "رمز ایمیل هنوز وارد نشده است."
+    try:
+        box = imaplib.IMAP4_SSL(c["imap_host"], c["imap_port"], timeout=15)
+        box.login(c["user"], c["password"])
+        box.logout()
+    except (imaplib.IMAP4.error, OSError) as exc:
+        return False, f"ورود به سرور دریافت (IMAP) ناموفق بود: {exc}"
+    try:
+        srv = smtplib.SMTP(c["smtp_host"], c["smtp_port"], timeout=15)
+        srv.starttls()
+        srv.login(c["user"], c["password"])
+        srv.quit()
+    except (smtplib.SMTPException, OSError) as exc:
+        return False, f"ورود به سرور ارسال (SMTP) ناموفق بود: {exc}"
+    return True, "اتصال به سرور دریافت و ارسال ایمیل موفق بود."
 
 
 def _clean(html):
@@ -60,14 +96,15 @@ def sync_inbox():
     """Fetch mails newer than the last stored UID. Returns the number of new messages."""
     state = MailSync.load()
     if not configured():
-        raise MailError("رمز صندوق ایمیل تنظیم نشده است (متغیر MAIL_PASSWORD).")
+        raise MailError("رمز صندوق ایمیل هنوز در «تنظیمات ایمیل» وارد نشده است.")
+    c = conf()
     last = (MailMessage.objects.filter(direction="in", uid__isnull=False)
             .order_by("-uid").values_list("uid", flat=True).first() or 0)
     new = 0
     try:
-        box = imaplib.IMAP4_SSL(settings.MAIL_IMAP_HOST, settings.MAIL_IMAP_PORT, timeout=20)
+        box = imaplib.IMAP4_SSL(c["imap_host"], c["imap_port"], timeout=20)
         try:
-            box.login(settings.MAIL_USER, settings.MAIL_PASSWORD)
+            box.login(c["user"], c["password"])
             box.select("INBOX", readonly=True)
             typ, data = box.uid("SEARCH", None, f"UID {last + 1}:*")
             uids = [int(u) for u in (data[0] or b"").split() if int(u) > last]
@@ -106,10 +143,14 @@ def stale(minutes=5):
 def send(to, subject, body, cc="", reply_to_msg=None):
     """Send via SMTP and keep a copy in the 'sent' list."""
     if not configured():
-        raise MailError("رمز صندوق ایمیل تنظیم نشده است (متغیر MAIL_PASSWORD).")
+        raise MailError("رمز صندوق ایمیل هنوز در «تنظیمات ایمیل» وارد نشده است.")
+    c = conf()
     to_list = [a.strip() for a in re.split(r"[,;\s]+", to) if a.strip()]
     cc_list = [a.strip() for a in re.split(r"[,;\s]+", cc) if a.strip()]
-    mail = EmailMessage(subject=subject, body=body, to=to_list, cc=cc_list)
+    conn = get_connection(host=c["smtp_host"], port=c["smtp_port"], username=c["user"], password=c["password"],
+                          use_tls=True, timeout=20)
+    mail = EmailMessage(subject=subject, body=body, to=to_list, cc=cc_list, from_email=f"{c['from_name']} <{c['user']}>",
+                        connection=conn)
     error = ""
     try:
         mail.send(fail_silently=False)
@@ -117,7 +158,7 @@ def send(to, subject, body, cc="", reply_to_msg=None):
         log.warning("mail send failed: %s", exc)
         error = f"{type(exc).__name__}: {exc}"[:300]
     MailMessage.objects.create(
-        direction="out", from_name=settings.MAIL_FROM_NAME, from_addr=settings.MAIL_USER,
+        direction="out", from_name=c["from_name"], from_addr=c["user"],
         to_addrs=", ".join(to_list), subject=subject[:500], body_text=body, sent_at=timezone.now(),
         is_read=True, error=error)
     if error:

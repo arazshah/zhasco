@@ -291,3 +291,35 @@ class MailSync(models.Model):
     @classmethod
     def load(cls):
         return cls.objects.get_or_create(pk=1)[0]
+
+
+class MailSettings(models.Model):
+    """Singleton: mailbox credentials editable from the dashboard. The password is stored encrypted
+    (Fernet, key derived from SECRET_KEY) and is never shown again."""
+
+    user = models.CharField("نشانی ایمیل (نام کاربری)", max_length=254, default="info@zhasco.ir")
+    password_encrypted = models.TextField(blank=True, editable=False)
+    from_name = models.CharField("نام نمایشی فرستنده", max_length=100, default="ژرف آذران صدر")
+    imap_host = models.CharField("سرور دریافت (IMAP)", max_length=100, default="t1.mail.chabokan.net")
+    imap_port = models.PositiveIntegerField("پورت IMAP", default=993)
+    smtp_host = models.CharField("سرور ارسال (SMTP)", max_length=100, default="t1.mail.chabokan.net")
+    smtp_port = models.PositiveIntegerField("پورت SMTP", default=587)
+
+    class Meta:
+        verbose_name = "تنظیمات ایمیل"
+        verbose_name_plural = "تنظیمات ایمیل"
+
+    def __str__(self):
+        return "تنظیمات ایمیل"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        return cls.objects.get_or_create(pk=1)[0]
+
+    @property
+    def has_password(self):
+        return bool(self.password_encrypted)
