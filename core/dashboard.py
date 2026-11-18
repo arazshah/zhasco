@@ -11,6 +11,12 @@ def unread_messages_badge(request):
     return str(n) if n else None
 
 
+def unread_mail_badge(request):
+    from core.models import MailMessage
+    n = MailMessage.objects.filter(direction="in", is_read=False).count()
+    return str(n) if n else None
+
+
 def unread_applications_badge(request):
     n = JobApplication.objects.filter(is_read=False).count()
     return str(n) if n else None

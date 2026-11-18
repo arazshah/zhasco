@@ -252,3 +252,42 @@ class InitialPassword(models.Model):
     class Meta:
         verbose_name = "رمز اولیه"
         verbose_name_plural = "رمزهای اولیه"
+
+
+class MailMessage(models.Model):
+    """Local copy of mails in the company mailbox (inbox synced via IMAP, sent mail logged on send)."""
+
+    IN, OUT = "in", "out"
+    direction = models.CharField("نوع", max_length=3, choices=[("in", "دریافتی"), ("out", "ارسالی")], default="in")
+    uid = models.PositiveBigIntegerField("شناسه IMAP", null=True, blank=True)
+    from_name = models.CharField("نام فرستنده", max_length=200, blank=True)
+    from_addr = models.CharField("ایمیل فرستنده", max_length=254, blank=True)
+    to_addrs = models.CharField("گیرندگان", max_length=1000, blank=True)
+    subject = models.CharField("موضوع", max_length=500, blank=True)
+    body_text = models.TextField("متن", blank=True)
+    body_html = models.TextField("متن (HTML پاک‌سازی‌شده)", blank=True)
+    has_attachments = models.BooleanField("دارای پیوست", default=False)
+    sent_at = models.DateTimeField("زمان")
+    is_read = models.BooleanField("خوانده شده", default=False)
+    error = models.CharField("خطای ارسال", max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "ایمیل"
+        verbose_name_plural = "صندوق ایمیل"
+        ordering = ["-sent_at", "-id"]
+        constraints = [models.UniqueConstraint(fields=["direction", "uid"], name="uniq_mail_uid",
+                                               condition=models.Q(uid__isnull=False))]
+
+    def __str__(self):
+        return self.subject or "(بدون موضوع)"
+
+
+class MailSync(models.Model):
+    """Singleton: state of the last IMAP sync."""
+
+    last_sync = models.DateTimeField(null=True, blank=True)
+    last_error = models.CharField(max_length=300, blank=True)
+
+    @classmethod
+    def load(cls):
+        return cls.objects.get_or_create(pk=1)[0]
