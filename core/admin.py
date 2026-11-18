@@ -135,11 +135,12 @@ from django.shortcuts import redirect, render  # noqa: E402
 from django.urls import path  # noqa: E402
 from django.utils.html import format_html  # noqa: E402
 from django.utils.safestring import mark_safe  # noqa: E402
-from unfold.widgets import (UnfoldAdminEmailInputWidget, UnfoldAdminTextareaWidget,  # noqa: E402
+from unfold.widgets import (UnfoldAdminPasswordWidget, UnfoldAdminTextareaWidget,  # noqa: E402
                             UnfoldAdminTextInputWidget)
 
 from core import mail as mailer  # noqa: E402
-from core.models import MailMessage, MailSync  # noqa: E402
+from core import secrets as secretbox  # noqa: E402
+from core.models import MailMessage, MailSettings, MailSync  # noqa: E402
 
 
 class ComposeForm(forms.Form):
@@ -177,7 +178,7 @@ class MailMessageAdmin(ModelAdmin):
             except mailer.MailError as exc:
                 messages.warning(request, str(exc))
         elif not mailer.configured() and request.method == "GET":
-            messages.warning(request, "برای فعال‌شدن ایمیل، متغیر MAIL_PASSWORD (رمز info@zhasco.ir) را در Coolify تنظیم کنید.")
+            messages.warning(request, mark_safe(f'برای فعال‌شدن ایمیل، رمز صندوق را در <a href="{reverse("admin:core_mailsettings_changelist")}"><b>تنظیمات ایمیل</b></a> وارد کنید.'))
         return super().changelist_view(request, extra_context)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
@@ -271,3 +272,59 @@ class MailMessageAdmin(ModelAdmin):
         ctx = {**self.admin_site.each_context(request), "title": "نوشتن ایمیل", "form": form,
                "configured": mailer.configured(), "opts": self.model._meta}
         return render(request, "admin/core/mail_compose.html", ctx)
+
+
+class MailSettingsForm(forms.ModelForm):
+    password = forms.CharField(
+        label="رمز ایمیل", required=False, strip=False,
+        widget=UnfoldAdminPasswordWidget(render_value=False, attrs={"autocomplete": "new-password", "dir": "ltr"}),
+        help_text="رمز صندوق info@zhasco.ir در چابکان. به‌صورت رمزنگاری‌شده ذخیره می‌شود و هرگز دوباره نمایش داده نمی‌شود. "
+                  "برای نگه‌داشتن رمز فعلی این فیلد را خالی بگذارید.")
+
+    class Meta:
+        model = MailSettings
+        fields = ["user", "from_name", "imap_host", "imap_port", "smtp_host", "smtp_port"]
+
+
+@admin.register(MailSettings)
+class MailSettingsAdmin(ModelAdmin):
+    form = MailSettingsForm
+    fieldsets = [
+        ("حساب ایمیل", {"fields": ["user", "password", "from_name", "status"]}),
+        ("سرورها (معمولاً نیاز به تغییر ندارد)", {"fields": [("imap_host", "imap_port"), ("smtp_host", "smtp_port")]}),
+    ]
+    readonly_fields = ["status"]
+
+    # contains a credential: superusers only
+    def has_module_permission(self, request):
+        return request.user.is_active and request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return self.has_module_permission(request)
+
+    has_change_permission = has_view_permission
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        return HttpResponseRedirect(reverse("admin:core_mailsettings_change", args=[MailSettings.load().pk]))
+
+    @display(description="وضعیت رمز")
+    def status(self, obj):
+        if obj.has_password:
+            return "رمز ذخیره شده است"
+        return "رمز هنوز وارد نشده است" + (" (از متغیر محیطی MAIL_PASSWORD استفاده می‌شود)" if mailer.configured() else "")
+
+    def save_model(self, request, obj, form, change):
+        new_password = form.cleaned_data.get("password")
+        if new_password:
+            obj.password_encrypted = secretbox.encrypt(new_password)
+        super().save_model(request, obj, form, change)
+        ok, text = mailer.test_connection()
+        (messages.success if ok else messages.warning)(request, text)
+        if not ok and mailer.configured():
+            messages.info(request, "اطلاعات ذخیره شد؛ نشانی، رمز و سرورها را بررسی کنید.")

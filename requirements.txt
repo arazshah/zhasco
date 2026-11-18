@@ -4,4 +4,5 @@ whitenoise>=6.7,<7
 gunicorn>=23
 Pillow>=11
 nh3>=0.2.18
+cryptography>=43
 jdatetime>=5

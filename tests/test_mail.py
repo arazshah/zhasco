@@ -67,3 +67,46 @@ class MailTests(TestCase):
         self.assertEqual(len(djmail.outbox), 1)
         r = self.client.post(reverse("admin:core_mailmessage_compose"), {"to": "not-an-email", "subject": "Re", "body": "ok"})
         self.assertEqual(r.status_code, 200)
+
+
+class MailSettingsTests(TestCase):
+    def setUp(self):
+        self.su = get_user_model().objects.create_superuser("root", "", "pw-12345-xx")
+        self.client.force_login(self.su)
+        from core.models import MailSettings
+        MailSettings.load()
+
+    def test_password_saved_encrypted_and_never_shown(self):
+        url = reverse("admin:core_mailsettings_change", args=[1])
+        with mock.patch("core.mail.test_connection", return_value=(True, "ok")):
+            r = self.client.post(url, {"user": "info@zhasco.ir", "password": "S3cret-Pass!", "from_name": "X",
+                                       "imap_host": "h", "imap_port": 993, "smtp_host": "h", "smtp_port": 587})
+        self.assertEqual(r.status_code, 302, r.get("Location"))
+        self.assertEqual(r["Location"], reverse("admin:core_mailsettings_changelist"), r.get("Location"))
+        from core.models import MailSettings
+        row = MailSettings.load()
+        self.assertTrue(row.has_password)
+        self.assertNotIn("S3cret-Pass!", row.password_encrypted)
+        self.assertEqual(mailer.conf()["password"], "S3cret-Pass!")
+        self.assertNotContains(self.client.get(url), "S3cret-Pass!")
+        # blank password keeps the saved one
+        with mock.patch("core.mail.test_connection", return_value=(True, "ok")):
+            self.client.post(url, {"user": "info@zhasco.ir", "password": "", "from_name": "Y",
+                                   "imap_host": "h", "imap_port": 993, "smtp_host": "h", "smtp_port": 587})
+        self.assertEqual(mailer.conf()["password"], "S3cret-Pass!")
+
+    def test_wrong_secret_key_means_not_configured(self):
+        from core import secrets as sb
+        token = sb.encrypt("abc")
+        with override_settings(SECRET_KEY="another-key"):
+            self.assertEqual(sb.decrypt(token), "")
+
+    def test_staff_without_superuser_cannot_open_mail_settings(self):
+        staff = get_user_model().objects.create_user("st", "", "pw-12345-xx", is_staff=True)
+        self.client.force_login(staff)
+        r = self.client.get(reverse("admin:core_mailsettings_change", args=[1]))
+        self.assertIn(r.status_code, (302, 403))
+
+    def test_conf_prefers_db_then_env(self):
+        with override_settings(MAIL_PASSWORD="envpw"):
+            self.assertEqual(mailer.conf()["password"], "envpw")

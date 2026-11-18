@@ -216,6 +216,8 @@ UNFOLD = {
                 "separator": True,
                 "items": [
                     {"title": "تنظیمات سایت", "icon": "settings", "link": reverse_lazy("admin:core_sitesettings_changelist")},
+                    {"title": "تنظیمات ایمیل", "icon": "key", "link": reverse_lazy("admin:core_mailsettings_changelist"),
+                     "permission": lambda request: request.user.is_superuser},
                     {"title": "استان‌ها و نقشه", "icon": "map", "link": reverse_lazy("admin:core_province_changelist")},
                     {"title": "کاربران", "icon": "person", "link": reverse_lazy("admin:auth_user_changelist")},
                     {"title": "گروه‌ها", "icon": "lock", "link": reverse_lazy("admin:auth_group_changelist")},
@@ -228,7 +230,8 @@ LOGIN_URL = "admin:login"
 LOGIN_REDIRECT_URL = "/admin/"
 
 # --- company mailbox (info@zhasco.ir on Chabokan) --------------------------
-# Only MAIL_PASSWORD must be provided; without it the dashboard mail section explains what is missing.
+# Defaults only: the password and servers are normally entered in the dashboard (تنظیمات ایمیل);
+# MAIL_PASSWORD is an optional fallback.
 MAIL_USER = os.environ.get("MAIL_USER", "info@zhasco.ir")
 MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
 MAIL_IMAP_HOST = os.environ.get("MAIL_IMAP_HOST", "t1.mail.chabokan.net")
