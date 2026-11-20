@@ -23,8 +23,8 @@ class JobApplicationAdmin(ModelAdmin):
     list_display = ["name", "posting", "phone", "email", "created_display", "is_read"]
     list_filter = ["is_read", "posting"]
     search_fields = ["name", "phone", "email", "field_of_study"]
-    readonly_fields = ["posting", "name", "phone", "email", "field_of_study", "message", "resume", "created_at"]
-    fields = ["posting", "name", "phone", "email", "field_of_study", "message", "resume", "created_at", "is_read"]
+    readonly_fields = ["posting", "name", "phone", "email", "field_of_study", "message", "resume", "created_at", "ip"]
+    fields = ["posting", "name", "phone", "email", "field_of_study", "message", "resume", "created_at", "ip", "is_read"]
     actions = ["mark_read"]
 
     def has_add_permission(self, request):

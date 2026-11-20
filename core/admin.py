@@ -108,11 +108,11 @@ class RndResourceAdmin(ModelAdmin):
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(ModelAdmin):
-    list_display = ["name", "subject", "phone", "email", "created_display", "is_read"]
+    list_display = ["name", "subject", "phone", "email", "created_display", "ip", "is_read"]
     list_filter = ["is_read"]
     search_fields = ["name", "subject", "message", "phone", "email"]
-    readonly_fields = ["name", "phone", "email", "subject", "message", "created_at"]
-    fields = ["name", "phone", "email", "subject", "message", "created_at", "is_read", "note"]
+    readonly_fields = ["name", "phone", "email", "subject", "message", "created_at", "ip"]
+    fields = ["name", "phone", "email", "subject", "message", "created_at", "ip", "is_read", "note"]
     actions = ["mark_read"]
 
     def has_add_permission(self, request):

@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods, require_GET
 
-from core import map_data
+from core import antispam, map_data
 from core.forms import ContactForm
 from core.models import (Certificate, Client, Office, OrgUnit, Province, RndResource, TeamMember,
                          TimelineEvent, ValueItem)
@@ -79,17 +79,23 @@ def rnd(request):
 def contact(request):
     form = ContactForm(request.POST or None)
     if request.method == "POST":
-        last = request.session.get("last_contact", 0)
-        if time.time() - last < 20:
+        if request.POST.get("website"):  # honeypot filled: silently drop
+            return redirect("core:contact")
+        if time.time() - request.session.get("last_contact", 0) < 20:
             messages.error(request, "لطفاً چند ثانیه بعد دوباره تلاش کنید.")
         elif form.is_valid():
-            form.save()
-            request.session["last_contact"] = time.time()
-            messages.success(request, "پیام شما ثبت شد. در اسرع وقت با شما تماس می‌گیریم.")
-            return redirect("core:contact")
-        elif form.errors.get("__all__") == ["spam"]:
-            return redirect("core:contact")
-    return render(request, "core/contact.html", {"form": form, "offices": Office.objects.all()})
+            err = antispam.check_submission(request, "contact", form.cleaned_data["message"], form.cleaned_data["subject"])
+            if err:
+                messages.error(request, err)
+            else:
+                msg = form.save(commit=False)
+                msg.ip = antispam.client_ip(request)[:45]
+                msg.save()
+                request.session["last_contact"] = time.time()
+                messages.success(request, "پیام شما ثبت شد. در اسرع وقت با شما تماس می‌گیریم.")
+                return redirect("core:contact")
+    return render(request, "core/contact.html", {"form": form, "offices": Office.objects.all(),
+                                                 "challenge": antispam.new_challenge()})
 
 
 @require_GET

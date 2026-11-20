@@ -19,8 +19,6 @@ class ContactForm(forms.ModelForm):
 
     def clean(self):
         data = super().clean()
-        if data.get("website"):
-            raise forms.ValidationError("spam")
         if not data.get("phone") and not data.get("email"):
             raise forms.ValidationError("لطفاً حداقل یکی از راه‌های ارتباطی (تلفن یا ایمیل) را وارد کنید.")
         return data

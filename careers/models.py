@@ -40,6 +40,7 @@ class JobApplication(models.Model):
                               validators=[FileExtensionValidator(["pdf", "doc", "docx"]), validate_resume_size])
     created_at = models.DateTimeField("زمان ارسال", auto_now_add=True)
     is_read = models.BooleanField("بررسی شده", default=False)
+    ip = models.GenericIPAddressField("آدرس IP", null=True, blank=True)
 
     class Meta:
         verbose_name = "رزومه دریافتی"

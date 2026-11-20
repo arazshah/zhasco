@@ -16,7 +16,3 @@ class ApplicationForm(forms.ModelForm):
             "resume": forms.ClearableFileInput(attrs={"accept": ".pdf,.doc,.docx"}),
         }
 
-    def clean_website(self):
-        if self.cleaned_data.get("website"):
-            raise forms.ValidationError("spam")
-        return ""
