@@ -14,6 +14,8 @@
       <div class="field">{{ form.field_of_study.label_tag }}{{ form.field_of_study }}</div>
       <div class="field">{{ form.message.label_tag }}{{ form.message }}</div>
       <div class="field">{{ form.resume.label_tag }}{{ form.resume }}{{ form.resume.errors }}<small class="muted">PDF یا Word، حداکثر ۵ مگابایت</small></div>
+      <div class="field"><label for="captcha">سؤال امنیتی: <b>{{ challenge.question }} = ؟</b></label><input id="captcha" name="captcha" inputmode="numeric" autocomplete="off" dir="ltr" required></div>
+      <input type="hidden" name="ts_token" value="{{ challenge.token }}">
       <div class="hp" aria-hidden="true">{{ form.website }}</div>
       <button class="btn" type="submit">ارسال رزومه</button>
     </form></section>

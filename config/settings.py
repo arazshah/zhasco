@@ -125,6 +125,9 @@ WHITENOISE_MAX_AGE = 31536000 if not DEBUG else 0
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = DATA_DIR / "media"
+# shared by all gunicorn workers (used for anti-spam rate limits / one-time form tokens)
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.filebased.FileBasedCache", "LOCATION": str(DATA_DIR / "cache")}}
+
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 

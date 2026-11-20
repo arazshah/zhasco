@@ -3,6 +3,7 @@ import time
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
+from core import antispam
 from careers.forms import ApplicationForm
 from careers.models import JobPosting
 
@@ -23,15 +24,21 @@ def general_application(request):
 def _apply(request, job):
     form = ApplicationForm(request.POST or None, request.FILES or None)
     if request.method == "POST":
+        if request.POST.get("website"):  # honeypot filled: silently drop
+            return redirect(request.path)
         if time.time() - request.session.get("last_apply", 0) < 30:
             messages.error(request, "لطفاً چند ثانیه بعد دوباره تلاش کنید.")
         elif form.is_valid():
-            app = form.save(commit=False)
-            app.posting = job
-            app.save()
-            request.session["last_apply"] = time.time()
-            messages.success(request, "رزومه شما با موفقیت ارسال شد. از همکاری شما سپاسگزاریم.")
-            return redirect(request.path)
-        elif "website" in form.errors:
-            return redirect(request.path)
-    return render(request, "careers/detail.html", {"job": job, "form": form})
+            err = antispam.check_submission(request, "apply", form.cleaned_data["message"], form.cleaned_data["field_of_study"],
+                                            limit=3)
+            if err:
+                messages.error(request, err)
+            else:
+                app = form.save(commit=False)
+                app.posting = job
+                app.ip = antispam.client_ip(request)[:45]
+                app.save()
+                request.session["last_apply"] = time.time()
+                messages.success(request, "رزومه شما با موفقیت ارسال شد. از همکاری شما سپاسگزاریم.")
+                return redirect(request.path)
+    return render(request, "careers/detail.html", {"job": job, "form": form, "challenge": antispam.new_challenge()})

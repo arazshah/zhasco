@@ -1,6 +1,10 @@
+import re
+
+from django.core import signing
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from careers.models import JobApplication
@@ -9,10 +13,25 @@ from core.templatetags.zh import clean_html, fa, fa_num, level
 from projects.models import Project
 
 
+LOCMEM = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+
+
+def challenge(client, url):
+    """Fetch a form page and return the solved anti-spam fields."""
+    html = client.get(url).content.decode()
+    token = re.search(r'name="ts_token" value="([^"]+)"', html).group(1)
+    d = signing.loads(token, salt="zhasco.antispam.v1")
+    return {"ts_token": token, "captcha": str(d["a"] + d["b"])}
+
+
+@override_settings(CACHES=LOCMEM, ANTISPAM_MIN_SECONDS=0)
 class SiteTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         call_command("seed_initial_data", verbosity=0)
+
+    def setUp(self):
+        cache.clear()
 
     def test_seed_counts(self):
         self.assertEqual(Province.objects.count(), 31)
@@ -52,12 +71,12 @@ class SiteTests(TestCase):
         self.assertNotIn(p.contract_number, self.client.get(f"/projects/{p.pk}/").content.decode().replace("۰", "0"))
 
     def test_contact_form(self):
-        r = self.client.post("/contact/", {"name": "علی", "phone": "0912", "message": "سلام"})
+        r = self.client.post("/contact/", {"name": "علی", "phone": "0912", "message": "سلام", **challenge(self.client, "/contact/")})
         self.assertEqual(r.status_code, 302)
         self.assertEqual(ContactMessage.objects.count(), 1)
 
     def test_contact_requires_phone_or_email(self):
-        self.client.post("/contact/", {"name": "علی", "message": "سلام"})
+        self.client.post("/contact/", {"name": "علی", "message": "سلام", **challenge(self.client, "/contact/")})
         self.assertEqual(ContactMessage.objects.count(), 0)
 
     def test_contact_honeypot(self):
@@ -66,10 +85,10 @@ class SiteTests(TestCase):
 
     def test_resume_upload_validation(self):
         bad = SimpleUploadedFile("x.exe", b"MZ", content_type="application/octet-stream")
-        self.client.post("/careers/apply/", {"name": "a", "phone": "1", "resume": bad})
+        self.client.post("/careers/apply/", {"name": "a", "phone": "1", "resume": bad, **challenge(self.client, "/careers/apply/")})
         self.assertEqual(JobApplication.objects.count(), 0)
         ok = SimpleUploadedFile("cv.pdf", b"%PDF-1.4 test", content_type="application/pdf")
-        self.client.post("/careers/apply/", {"name": "a", "phone": "1", "resume": ok})
+        self.client.post("/careers/apply/", {"name": "a", "phone": "1", "resume": ok, **challenge(self.client, "/careers/apply/")})
         self.assertEqual(JobApplication.objects.count(), 1)
 
     def test_admin_requires_login(self):
@@ -121,3 +140,55 @@ class FirstLoginTests(TestCase):
         get_user_model().objects.create_superuser("owner", "", "OwnerPass-12345")
         call_command("ensure_superuser", verbosity=0)
         self.assertFalse(get_user_model().objects.filter(username="admin").exists())
+
+
+@override_settings(CACHES=LOCMEM, ANTISPAM_MIN_SECONDS=0)
+class AntiSpamTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_missing_or_wrong_answer_rejected(self):
+        self.client.post("/contact/", {"name": "x", "phone": "1", "message": "m"})
+        d = challenge(self.client, "/contact/"); d["captcha"] = "999"
+        self.client.post("/contact/", {"name": "x", "phone": "1", "message": "m", **d})
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_persian_digits_accepted(self):
+        d = challenge(self.client, "/contact/")
+        d["captcha"] = d["captcha"].translate(str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹"))
+        self.client.post("/contact/", {"name": "x", "phone": "1", "message": "m", **d})
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    def test_token_is_one_time(self):
+        d = challenge(self.client, "/contact/")
+        self.client.post("/contact/", {"name": "a", "phone": "1", "message": "m", **d})
+        c2 = self.client_class()  # a bot without cookies replaying the same token
+        c2.post("/contact/", {"name": "b", "phone": "1", "message": "m", **d})
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    @override_settings(ANTISPAM_MIN_SECONDS=30)
+    def test_too_fast_rejected(self):
+        d = challenge(self.client, "/contact/")
+        self.client.post("/contact/", {"name": "a", "phone": "1", "message": "m", **d})
+        self.assertEqual(ContactMessage.objects.count(), 0)
+
+    def test_links_rejected_one_link_ok(self):
+        d = challenge(self.client, "/contact/")
+        self.client.post("/contact/", {"name": "a", "phone": "1", "message": "buy http://a.com http://b.com www.c.com", **d})
+        self.assertEqual(ContactMessage.objects.count(), 0)
+        d = challenge(self.client, "/contact/")
+        self.client.post("/contact/", {"name": "a", "phone": "1", "message": "سایت ما http://a.com", **d})
+        self.assertEqual(ContactMessage.objects.count(), 1)
+
+    def test_rate_limit_per_ip_even_without_cookies(self):
+        for i in range(8):
+            c = self.client_class()  # new session each time, same IP
+            d = challenge(c, "/contact/")
+            c.post("/contact/", {"name": f"n{i}", "phone": "1", "message": f"m{i}", **d}, HTTP_X_FORWARDED_FOR="9.9.9.9")
+        self.assertEqual(ContactMessage.objects.count(), 5)
+        self.assertEqual(set(ContactMessage.objects.values_list("ip", flat=True)), {"9.9.9.9"})
+
+    def test_honeypot_silently_dropped(self):
+        d = challenge(self.client, "/contact/")
+        self.client.post("/contact/", {"name": "bot", "phone": "1", "message": "m", "website": "http://x", **d})
+        self.assertEqual(ContactMessage.objects.count(), 0)

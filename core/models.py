@@ -232,6 +232,7 @@ class ContactMessage(models.Model):
     created_at = models.DateTimeField("زمان ارسال", auto_now_add=True)
     is_read = models.BooleanField("خوانده شده", default=False)
     note = models.TextField("یادداشت داخلی", blank=True)
+    ip = models.GenericIPAddressField("آدرس IP", null=True, blank=True)
 
     class Meta:
         verbose_name = "پیام تماس"
